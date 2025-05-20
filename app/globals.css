@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 9% 16%;
+    --foreground: 0 0% 92%;
+    --card: 240 9% 16%;
+    --card-foreground: 0 0% 92%;
+    --popover: 240 9% 16%;
+    --popover-foreground: 0 0% 92%;
+    --primary: 50 100% 65%;
+    --primary-foreground: 240 9% 16%;
+    --secondary: 240 5% 25%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 240 5% 25%;
+    --muted-foreground: 220 5% 51%;
+    --accent: 240 5% 25%;
+    --accent-foreground: 0 0% 92%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 92%;
+    --border: 240 5% 25%;
+    --input: 240 5% 25%;
+    --ring: 50 100% 65%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-bounce {
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-25%);
+  }
+}
