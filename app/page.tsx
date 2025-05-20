@@ -1112,6 +1112,7 @@ export default function LandingPage() {
                 </div>
 
                 <div className="space-y-4">
+                  {/* Pagamento via PIX */}
                   <motion.div
                     whileHover={{ scale: 1.03 }}
                     className="bg-primary/10 rounded-lg p-4 border-l-4 border-primary"
@@ -1120,14 +1121,25 @@ export default function LandingPage() {
                       <Wallet className="h-5 w-5" />
                       Pagamento via PIX (Recomendado)
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-4">Acesso imediato após confirmação do pagamento</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Acesso imediato após confirmação do pagamento
+                    </p>
                     <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                      <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-14 text-lg animate-pulse">
-                        COMPRAR AGORA COM PIX
-                      </Button>
+                      <Link
+                        href="https://ebook-guia-definitivo-do-lucro-automatico-71562706.clickmax.xyz/obrigado"
+                        passHref
+                      >
+                        <Button
+                          asChild
+                          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-14 text-lg animate-pulse"
+                        >
+                          <a>COMPRAR AGORA COM PIX</a>
+                        </Button>
+                      </Link>
                     </motion.div>
                   </motion.div>
 
+                  {/* Pagamento com Cartão de Crédito */}
                   <motion.div
                     whileHover={{ scale: 1.03 }}
                     className="bg-secondary rounded-lg p-4 border-l-4 border-muted"
@@ -1136,14 +1148,26 @@ export default function LandingPage() {
                       <CreditCard className="h-5 w-5" />
                       Cartão de Crédito
                     </h3>
-                    <p className="text-sm text-muted-foreground mb-4">Parcelamento em até 12x (sujeito a juros)</p>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Parcelamento em até 12x (sujeito a juros)
+                    </p>
                     <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                      <Button variant="outline" className="w-full h-14 text-lg">
-                        COMPRAR COM CARTÃO
-                      </Button>
+                      <Link
+                        href="https://ebook-guia-definitivo-do-lucro-automatico-71562706.clickmax.xyz/obrigado"
+                        passHref
+                      >
+                        <Button
+                          asChild
+                          variant="outline"
+                          className="w-full h-14 text-lg"
+                        >
+                          <a>COMPRAR COM CARTÃO</a>
+                        </Button>
+                      </Link>
                     </motion.div>
                   </motion.div>
                 </div>
+
 
                 <motion.div
                   variants={fadeInUp}
