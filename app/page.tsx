@@ -367,7 +367,7 @@ export default function LandingPage() {
                   className="relative rounded-xl overflow-hidden border-2 border-primary/50"
                 >
                   <Image
-                    src="https://i.postimg.cc/qMRnzNrw/compri-capa-site20250521-0801-Adi-o-de-Cor-remix-01jvsnrvqhevhtac2mggh7gfst-1.png"
+                    src="https://i.postimg.cc/L6BJB7Kx/compri-capa-site20250521-0801-Adi-o-de-Cor-remix-01jvsnrvqhevhtac2mggh7gfst-1.webp"
                     width={400}
                     height={600}
                     alt="Capa do E-book Guia Definitivo do Lucro Automático"
