@@ -1,11 +1,22 @@
+/* page.tsx  – versão melhorada 21 / 05 / 2025
+   Refatorações principais
+   -----------------------
+   • Tipagem estrita (AnimatedSectionProps, Testimonial).
+   • useMemo para datas e depoimentos → evita recriar objetos a cada render.
+   • Dependências corretas nos useEffect.
+   • Funções utilitárias (shuffleArray, sanitize) extraídas do corpo do componente.
+   • Imports normalizados “@/components/…” em vez de relativos inconsistentes.
+   • Removidos any implícitos; ESLint/TypeScript zero-error.
+   • Código organizado em blocos lógicos com comentários.
+*/
+
 "use client"
 
-import React from "react"
-import { useEffect, useRef, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { motion, useInView, useAnimation, AnimatePresence } from "framer-motion"
+import { motion, useAnimation, useInView, AnimatePresence } from "framer-motion"
 import {
   ArrowDown,
   ArrowRight,
@@ -34,12 +45,32 @@ import {
   Lightbulb,
   Award,
 } from "lucide-react"
-import { CountdownTimer } from "../components/countdown-timer"
-import { ExpertProfile } from "../components/expert-profile"
+import { CountdownTimer } from "@/components/countdown-timer"
+import { ExpertProfile } from "@/components/expert-profile"
 import { sanitizeInput } from "@/lib/security"
 import { ModuleCarousel } from "@/components/module-carousel"
 
-// Animation variants
+/* -------------------------------------------------------------------------- */
+/*                               Util functions                               */
+/* -------------------------------------------------------------------------- */
+
+const shuffleArray = <T,>(arr: T[]): T[] => {
+  const copy = [...arr]
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  }
+  return copy
+}
+
+const sanitize = (html: string) => ({
+  __html: sanitizeInput(html),
+})
+
+/* -------------------------------------------------------------------------- */
+/*                                Animations                                  */
+/* -------------------------------------------------------------------------- */
+
 const fadeIn = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.6 } },
@@ -60,22 +91,22 @@ const staggerContainer = {
   },
 }
 
-const scaleOnHover = {
-  initial: { scale: 1 },
-  hover: { scale: 1.03, transition: { duration: 0.2 } },
+/* -------------------------------------------------------------------------- */
+/*                               Reusable part                                */
+/* -------------------------------------------------------------------------- */
+
+interface AnimatedSectionProps extends React.ComponentPropsWithoutRef<"section"> {
+  delay?: number
 }
 
-// Animated Section component
-const AnimatedSection = ({ children, className, delay = 0 }) => {
-  const ref = useRef(null)
-  const isInView = useInView(ref, { once: true, amount: 0.2 })
+const AnimatedSection: React.FC<AnimatedSectionProps> = ({ children, className, delay = 0, ...rest }) => {
+  const ref = useRef<HTMLElement>(null)
+  const inView = useInView(ref, { once: true, amount: 0.2 })
   const controls = useAnimation()
 
   useEffect(() => {
-    if (isInView) {
-      controls.start("visible")
-    }
-  }, [controls, isInView])
+    if (inView) controls.start("visible")
+  }, [inView, controls])
 
   return (
     <motion.section
@@ -84,119 +115,121 @@ const AnimatedSection = ({ children, className, delay = 0 }) => {
       animate={controls}
       variants={{
         hidden: { opacity: 0 },
-        visible: {
-          opacity: 1,
-          transition: {
-            duration: 0.6,
-            delay,
-          },
-        },
+        visible: { opacity: 1, transition: { duration: 0.6, delay } },
       }}
       className={className}
+      {...rest}
     >
       {children}
     </motion.section>
   )
 }
 
+/* -------------------------------------------------------------------------- */
+/*                             Main Page component                            */
+/* -------------------------------------------------------------------------- */
+
+interface Testimonial {
+  name: string
+  occupation: string
+  text: string
+  stars: number
+  highlight: string
+}
+
 export default function LandingPage() {
+  /* -------------------------------- State -------------------------------- */
+
   const [activeTestimonial, setActiveTestimonial] = useState(0)
-  const [displayedTestimonials, setDisplayedTestimonials] = useState([])
-  const allTestimonials = [
-    {
-      name: "Mariana",
-      occupation: "Gerente de Projetos",
-      text: "Saí da 'corrida dos ratos' e hoje tenho 5 fontes de renda passiva. Comecei com FIIs e hoje tenho um ecossistema completo que me rende R$4.500/mês sem precisar trabalhar ativamente.",
-      stars: 5,
-      highlight: "R$4.500/mês de renda passiva",
-    },
-    {
-      name: "Ana",
-      occupation: "Secretária, 30 anos",
-      text: "Nunca tinha investido antes. Comecei com R$200 em FIIs seguindo o passo a passo do capítulo 1, e hoje já tenho uma carteira diversificada que me rende R$800/mês.",
-      stars: 5,
-      highlight: "Começou com apenas R$200",
-    },
-    {
-      name: "Lucas",
-      occupation: "Investidor Imobiliário",
-      text: "Comecei com um pequeno apartamento para aluguel e hoje tenho 3 propriedades gerando renda passiva. O capítulo sobre cálculo de ROI foi fundamental para minhas decisões.",
-      stars: 5,
-      highlight: "3 propriedades gerando renda",
-    },
-    {
-      name: "Carlos",
-      occupation: "Professor Universitário",
-      text: "Transformei meu conhecimento em um curso online que vende enquanto durmo. Já são mais de 2.300 alunos e uma renda mensal média de R$3.700 sem precisar gravar novos conteúdos.",
-      stars: 5,
-      highlight: "R$3.700/mês com infoproduto",
-    },
-    {
-      name: "Juliana",
-      occupation: "Designer Gráfica",
-      text: "Comecei a vender templates e designs no Canva e em bancos de imagens. Hoje tenho mais de 150 itens à venda que me geram cerca de R$2.200 por mês em royalties.",
-      stars: 5,
-      highlight: "R$2.200/mês em royalties",
-    },
-    {
-      name: "Roberto",
-      occupation: "Analista de Sistemas",
-      text: "Criei um blog sobre tecnologia seguindo as dicas do capítulo 6. Em 8 meses já estava gerando R$1.800/mês com anúncios e links de afiliados, trabalhando apenas nos fins de semana.",
-      stars: 5,
-      highlight: "R$1.800/mês com blog",
-    },
-    {
-      name: "Fernanda",
-      occupation: "Nutricionista",
-      text: "Publiquei 3 e-books na Amazon KDP sobre alimentação saudável. Sem fazer nenhuma divulgação especial, já recebo R$950/mês em royalties. Foi muito mais fácil do que imaginei!",
-      stars: 5,
-      highlight: "R$950/mês com e-books",
-    },
-    {
-      name: "Paulo",
-      occupation: "Contador",
-      text: "Criei uma comunidade paga no Telegram onde compartilho dicas fiscais para MEIs. São mais de 300 assinantes pagando R$29,90/mês, gerando uma renda passiva incrível.",
-      stars: 5,
-      highlight: "R$8.970/mês com comunidade",
-    },
-    {
-      name: "Camila",
-      occupation: "Professora de Inglês",
-      text: "Seguindo o método do capítulo 4, criei um canal no YouTube ensinando inglês. Hoje tenho 45 mil inscritos e ganho aproximadamente R$3.200/mês com monetização e parcerias.",
-      stars: 5,
-      highlight: "R$3.200/mês com YouTube",
-    },
-  ]
+
+  /* ------------------------------ Data memo ------------------------------ */
+
+  const allTestimonials: Testimonial[] = useMemo(
+    () => [
+      {
+        name: "Mariana",
+        occupation: "Gerente de Projetos",
+        text: "Saí da 'corrida dos ratos' e hoje tenho 5 fontes de renda passiva. Comecei com FIIs e hoje tenho um ecossistema completo que me rende R$4.500/mês sem precisar trabalhar ativamente.",
+        stars: 5,
+        highlight: "R$4.500/mês de renda passiva",
+      },
+      {
+        name: "Ana",
+        occupation: "Secretária, 30 anos",
+        text: "Nunca tinha investido antes. Comecei com R$200 em FIIs seguindo o passo a passo do capítulo 1, e hoje já tenho uma carteira diversificada que me rende R$800/mês.",
+        stars: 5,
+        highlight: "Começou com apenas R$200",
+      },
+      {
+        name: "Lucas",
+        occupation: "Investidor Imobiliário",
+        text: "Comecei com um pequeno apartamento para aluguel e hoje tenho 3 propriedades gerando renda passiva. O capítulo sobre cálculo de ROI foi fundamental para minhas decisões.",
+        stars: 5,
+        highlight: "3 propriedades gerando renda",
+      },
+      {
+        name: "Carlos",
+        occupation: "Professor Universitário",
+        text: "Transformei meu conhecimento em um curso online que vende enquanto durmo. Já são mais de 2.300 alunos e uma renda mensal média de R$3.700 sem precisar gravar novos conteúdos.",
+        stars: 5,
+        highlight: "R$3.700/mês com infoproduto",
+      },
+      {
+        name: "Juliana",
+        occupation: "Designer Gráfica",
+        text: "Comecei a vender templates e designs no Canva e em bancos de imagens. Hoje tenho mais de 150 itens à venda que me geram cerca de R$2.200 por mês em royalties.",
+        stars: 5,
+        highlight: "R$2.200/mês em royalties",
+      },
+      {
+        name: "Roberto",
+        occupation: "Analista de Sistemas",
+        text: "Criei um blog sobre tecnologia seguindo as dicas do capítulo 6. Em 8 meses já estava gerando R$1.800/mês com anúncios e links de afiliados, trabalhando apenas nos fins de semana.",
+        stars: 5,
+        highlight: "R$1.800/mês com blog",
+      },
+      {
+        name: "Fernanda",
+        occupation: "Nutricionista",
+        text: "Publiquei 3 e-books na Amazon KDP sobre alimentação saudável. Sem fazer nenhuma divulgação especial, já recebo R$950/mês em royalties. Foi muito mais fácil do que imaginei!",
+        stars: 5,
+        highlight: "R$950/mês com e-books",
+      },
+      {
+        name: "Paulo",
+        occupation: "Contador",
+        text: "Criei uma comunidade paga no Telegram onde compartilho dicas fiscais para MEIs. São mais de 300 assinantes pagando R$29,90/mês, gerando uma renda passiva incrível.",
+        stars: 5,
+        highlight: "R$8.970/mês com comunidade",
+      },
+      {
+        name: "Camila",
+        occupation: "Professora de Inglês",
+        text: "Seguindo o método do capítulo 4, criei um canal no YouTube ensinando inglês. Hoje tenho 45 mil inscritos e ganho aproximadamente R$3.200/mês com monetização e parcerias.",
+        stars: 5,
+        highlight: "R$3.200/mês com YouTube",
+      },
+    ],
+    []
+  )
+
+  const displayedTestimonials = useMemo(() => shuffleArray(allTestimonials).slice(0, 3), [allTestimonials])
+
+  /* ---------------------------- Testimonial loop --------------------------- */
 
   useEffect(() => {
-    // Função para embaralhar o array
-    const shuffleArray = (array) => {
-      const shuffled = [...array]
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-      }
-      return shuffled
-    }
-
-    // Seleciona 3 depoimentos aleatórios
-    const randomTestimonials = shuffleArray(allTestimonials).slice(0, 3)
-    setDisplayedTestimonials(randomTestimonials)
-  }, [])
-
-  useEffect(() => {
-    if (displayedTestimonials.length === 0) return
-
-    const interval = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % displayedTestimonials.length)
-    }, 5000)
-    return () => clearInterval(interval)
+    const id = setInterval(
+      () => setActiveTestimonial((prev) => (prev + 1) % displayedTestimonials.length),
+      5000
+    )
+    return () => clearInterval(id)
   }, [displayedTestimonials.length])
 
-  // Função para sanitizar texto antes de exibir
-  const sanitize = (text: string) => {
-    return { __html: sanitizeInput(text) }
-  }
+  /* --------------------------- Shared countdown --------------------------- */
+
+  const offerDeadline = useMemo(() => new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), [])
+
+  /* -------------------------------- Render -------------------------------- */
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground overflow-x-hidden">
@@ -208,10 +241,10 @@ export default function LandingPage() {
         className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm"
       >
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-          <div className="flex items-center gap-2 font-bold text-xl text-primary">
+          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-primary">
             <Wallet className="h-6 w-6" />
             <span>Lucro Automático</span>
-          </div>
+          </Link>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
               <a href="https://payments.clickmax.io/rRoJNHDAJj">Comprar Agora</a>
