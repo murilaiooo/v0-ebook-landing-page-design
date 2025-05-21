@@ -1,25 +1,11 @@
-/* page.tsx  – versão melhorada 21 / 05 / 2025
-   Refatorações principais
-   -----------------------
-   • Tipagem estrita (AnimatedSectionProps, Testimonial).
-   • useMemo para datas e depoimentos → evita recriar objetos a cada render.
-   • Dependências corretas nos useEffect.
-   • Funções utilitárias (shuffleArray, sanitize) extraídas do corpo do componente.
-   • Imports normalizados "@/components/…" em vez de relativos inconsistentes.
-   • Removidos any implícitos; ESLint/TypeScript zero-error.
-   • Código organizado em blocos lógicos com comentários.
-   • Melhorias de acessibilidade e performance aplicadas.
-   • Validação de entrada de dados aprimorada.
-   • Tratamento de erros robusto implementado.
-*/
-
 "use client"
 
-import React, { useEffect, useMemo, useRef, useState, useCallback } from "react"
+import React from "react"
+import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { motion, useAnimation, useInView, AnimatePresence } from "framer-motion"
+import { motion, useInView, useAnimation, AnimatePresence } from "framer-motion"
 import {
   ArrowDown,
   ArrowRight,
@@ -48,41 +34,12 @@ import {
   Lightbulb,
   Award,
 } from "lucide-react"
-import { CountdownTimer } from "@/components/countdown-timer"
-import { ExpertProfile } from "@/components/expert-profile"
+import { CountdownTimer } from "../components/countdown-timer"
+import { ExpertProfile } from "../components/expert-profile"
 import { sanitizeInput } from "@/lib/security"
 import { ModuleCarousel } from "@/components/module-carousel"
 
-/* -------------------------------------------------------------------------- */
-/*                               Util functions                               */
-/* -------------------------------------------------------------------------- */
-
-const shuffleArray = <T,>(arr: readonly T[]): T[] => {
-  const copy = [...arr]
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[copy[i], copy[j]] = [copy[j], copy[i]]
-  }
-  return copy
-}
-
-const sanitize = (html: string): { __html: string } => ({
-  __html: sanitizeInput(html),
-})
-
-/* -------------------------------------------------------------------------- */
-/*                                Constants                                   */
-/* -------------------------------------------------------------------------- */
-
-const COUNTDOWN_DURATION = 3 * 24 * 60 * 60 * 1000 // 3 dias em ms
-const TESTIMONIAL_ROTATION_INTERVAL = 5000 // 5 segundos
-const PURCHASE_URL = "https://payments.clickmax.io/rRoJNHDAJj"
-const SUPPORT_EMAIL = "suportelucroautomatico@gmail.com"
-
-/* -------------------------------------------------------------------------- */
-/*                                Animations                                  */
-/* -------------------------------------------------------------------------- */
-
+// Animation variants
 const fadeIn = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.6 } },
@@ -103,72 +60,22 @@ const staggerContainer = {
   },
 }
 
-/* -------------------------------------------------------------------------- */
-/*                               Type definitions                             */
-/* -------------------------------------------------------------------------- */
-
-interface AnimatedSectionProps extends React.ComponentPropsWithoutRef<"section"> {
-  delay?: number
+const scaleOnHover = {
+  initial: { scale: 1 },
+  hover: { scale: 1.03, transition: { duration: 0.2 } },
 }
 
-interface Testimonial {
-  readonly name: string
-  readonly occupation: string
-  readonly text: string
-  readonly stars: number
-  readonly highlight: string
-}
-
-interface Module {
-  readonly title: string
-  readonly description: string
-  readonly icon: React.ReactNode
-  readonly outcome: string
-}
-
-interface Benefit {
-  readonly title: string
-  readonly description: string
-  readonly icon: React.ReactNode
-}
-
-interface AudienceProfile {
-  readonly title: string
-  readonly description: string
-  readonly icon: React.ReactNode
-  readonly ideal: boolean
-}
-
-interface ComparisonRow {
-  readonly feature: string
-  readonly without: string
-  readonly with: string
-}
-
-interface FAQ {
-  readonly question: string
-  readonly answer: string
-}
-
-/* -------------------------------------------------------------------------- */
-/*                               Reusable components                          */
-/* -------------------------------------------------------------------------- */
-
-const AnimatedSection: React.FC<AnimatedSectionProps> = ({ 
-  children, 
-  className = "", 
-  delay = 0, 
-  ...rest 
-}) => {
-  const ref = useRef<HTMLElement>(null)
-  const inView = useInView(ref, { once: true, amount: 0.2 })
+// Animated Section component
+const AnimatedSection = ({ children, className, delay = 0 }) => {
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, amount: 0.2 })
   const controls = useAnimation()
 
   useEffect(() => {
-    if (inView) {
+    if (isInView) {
       controls.start("visible")
     }
-  }, [inView, controls])
+  }, [controls, isInView])
 
   return (
     <motion.section
@@ -177,324 +84,120 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({
       animate={controls}
       variants={{
         hidden: { opacity: 0 },
-        visible: { opacity: 1, transition: { duration: 0.6, delay } },
+        visible: {
+          opacity: 1,
+          transition: {
+            duration: 0.6,
+            delay,
+          },
+        },
       }}
       className={className}
-      {...rest}
     >
       {children}
     </motion.section>
   )
 }
 
-/* -------------------------------------------------------------------------- */
-/*                             Static data                                    */
-/* -------------------------------------------------------------------------- */
+export default function LandingPage() {
+  const [activeTestimonial, setActiveTestimonial] = useState(0)
+  const [displayedTestimonials, setDisplayedTestimonials] = useState([])
+  const allTestimonials = [
+    {
+      name: "Mariana",
+      occupation: "Gerente de Projetos",
+      text: "Saí da 'corrida dos ratos' e hoje tenho 5 fontes de renda passiva. Comecei com FIIs e hoje tenho um ecossistema completo que me rende R$4.500/mês sem precisar trabalhar ativamente.",
+      stars: 5,
+      highlight: "R$4.500/mês de renda passiva",
+    },
+    {
+      name: "Ana",
+      occupation: "Secretária, 30 anos",
+      text: "Nunca tinha investido antes. Comecei com R$200 em FIIs seguindo o passo a passo do capítulo 1, e hoje já tenho uma carteira diversificada que me rende R$800/mês.",
+      stars: 5,
+      highlight: "Começou com apenas R$200",
+    },
+    {
+      name: "Lucas",
+      occupation: "Investidor Imobiliário",
+      text: "Comecei com um pequeno apartamento para aluguel e hoje tenho 3 propriedades gerando renda passiva. O capítulo sobre cálculo de ROI foi fundamental para minhas decisões.",
+      stars: 5,
+      highlight: "3 propriedades gerando renda",
+    },
+    {
+      name: "Carlos",
+      occupation: "Professor Universitário",
+      text: "Transformei meu conhecimento em um curso online que vende enquanto durmo. Já são mais de 2.300 alunos e uma renda mensal média de R$3.700 sem precisar gravar novos conteúdos.",
+      stars: 5,
+      highlight: "R$3.700/mês com infoproduto",
+    },
+    {
+      name: "Juliana",
+      occupation: "Designer Gráfica",
+      text: "Comecei a vender templates e designs no Canva e em bancos de imagens. Hoje tenho mais de 150 itens à venda que me geram cerca de R$2.200 por mês em royalties.",
+      stars: 5,
+      highlight: "R$2.200/mês em royalties",
+    },
+    {
+      name: "Roberto",
+      occupation: "Analista de Sistemas",
+      text: "Criei um blog sobre tecnologia seguindo as dicas do capítulo 6. Em 8 meses já estava gerando R$1.800/mês com anúncios e links de afiliados, trabalhando apenas nos fins de semana.",
+      stars: 5,
+      highlight: "R$1.800/mês com blog",
+    },
+    {
+      name: "Fernanda",
+      occupation: "Nutricionista",
+      text: "Publiquei 3 e-books na Amazon KDP sobre alimentação saudável. Sem fazer nenhuma divulgação especial, já recebo R$950/mês em royalties. Foi muito mais fácil do que imaginei!",
+      stars: 5,
+      highlight: "R$950/mês com e-books",
+    },
+    {
+      name: "Paulo",
+      occupation: "Contador",
+      text: "Criei uma comunidade paga no Telegram onde compartilho dicas fiscais para MEIs. São mais de 300 assinantes pagando R$29,90/mês, gerando uma renda passiva incrível.",
+      stars: 5,
+      highlight: "R$8.970/mês com comunidade",
+    },
+    {
+      name: "Camila",
+      occupation: "Professora de Inglês",
+      text: "Seguindo o método do capítulo 4, criei um canal no YouTube ensinando inglês. Hoje tenho 45 mil inscritos e ganho aproximadamente R$3.200/mês com monetização e parcerias.",
+      stars: 5,
+      highlight: "R$3.200/mês com YouTube",
+    },
+  ]
 
-const ALL_TESTIMONIALS: readonly Testimonial[] = [
-  {
-    name: "Mariana",
-    occupation: "Gerente de Projetos",
-    text: "Saí da 'corrida dos ratos' e hoje tenho 5 fontes de renda passiva. Comecei com FIIs e hoje tenho um ecossistema completo que me rende R$4.500/mês sem precisar trabalhar ativamente.",
-    stars: 5,
-    highlight: "R$4.500/mês de renda passiva",
-  },
-  {
-    name: "Ana",
-    occupation: "Secretária, 30 anos",
-    text: "Nunca tinha investido antes. Comecei com R$200 em FIIs seguindo o passo a passo do capítulo 1, e hoje já tenho uma carteira diversificada que me rende R$800/mês.",
-    stars: 5,
-    highlight: "Começou com apenas R$200",
-  },
-  {
-    name: "Lucas",
-    occupation: "Investidor Imobiliário",
-    text: "Comecei com um pequeno apartamento para aluguel e hoje tenho 3 propriedades gerando renda passiva. O capítulo sobre cálculo de ROI foi fundamental para minhas decisões.",
-    stars: 5,
-    highlight: "3 propriedades gerando renda",
-  },
-  {
-    name: "Carlos",
-    occupation: "Professor Universitário",
-    text: "Transformei meu conhecimento em um curso online que vende enquanto durmo. Já são mais de 2.300 alunos e uma renda mensal média de R$3.700 sem precisar gravar novos conteúdos.",
-    stars: 5,
-    highlight: "R$3.700/mês com infoproduto",
-  },
-  {
-    name: "Juliana",
-    occupation: "Designer Gráfica",
-    text: "Comecei a vender templates e designs no Canva e em bancos de imagens. Hoje tenho mais de 150 itens à venda que me geram cerca de R$2.200 por mês em royalties.",
-    stars: 5,
-    highlight: "R$2.200/mês em royalties",
-  },
-  {
-    name: "Roberto",
-    occupation: "Analista de Sistemas",
-    text: "Criei um blog sobre tecnologia seguindo as dicas do capítulo 6. Em 8 meses já estava gerando R$1.800/mês com anúncios e links de afiliados, trabalhando apenas nos fins de semana.",
-    stars: 5,
-    highlight: "R$1.800/mês com blog",
-  },
-  {
-    name: "Fernanda",
-    occupation: "Nutricionista",
-    text: "Publiquei 3 e-books na Amazon KDP sobre alimentação saudável. Sem fazer nenhuma divulgação especial, já recebo R$950/mês em royalties. Foi muito mais fácil do que imaginei!",
-    stars: 5,
-    highlight: "R$950/mês com e-books",
-  },
-  {
-    name: "Paulo",
-    occupation: "Contador",
-    text: "Criei uma comunidade paga no Telegram onde compartilho dicas fiscais para MEIs. São mais de 300 assinantes pagando R$29,90/mês, gerando uma renda passiva incrível.",
-    stars: 5,
-    highlight: "R$8.970/mês com comunidade",
-  },
-  {
-    name: "Camila",
-    occupation: "Professora de Inglês",
-    text: "Seguindo o método do capítulo 4, criei um canal no YouTube ensinando inglês. Hoje tenho 45 mil inscritos e ganho aproximadamente R$3.200/mês com monetização e parcerias.",
-    stars: 5,
-    highlight: "R$3.200/mês com YouTube",
-  },
-] as const
-
-const MODULES: readonly Module[] = [
-  {
-    title: "Investimentos em Dividendos e FIIs",
-    description: "Comece a receber renda mensal com investimentos a partir de R$100.",
-    icon: <BookText className="h-10 w-10 text-primary" />,
-    outcome: "Carteira gerando dividendos mensais",
-  },
-  {
-    title: "Imóveis para Aluguel",
-    description: "Maximize retornos com propriedades físicas e digitais sem complicações.",
-    icon: <Building className="h-10 w-10 text-primary" />,
-    outcome: "Renda passiva imobiliária otimizada",
-  },
-  {
-    title: "Royalties",
-    description: "Crie uma vez, receba para sempre com eBooks, músicas e designs.",
-    icon: <Music className="h-10 w-10 text-primary" />,
-    outcome: "Fluxo contínuo de royalties",
-  },
-  {
-    title: "Infoprodutos",
-    description: "Transforme seu conhecimento em produtos digitais que vendem 24/7.",
-    icon: <Video className="h-10 w-10 text-primary" />,
-    outcome: "Sistema de vendas automatizado",
-  },
-  {
-    title: "Marketing de Afiliados",
-    description: "Ganhe comissões promovendo produtos em que você acredita.",
-    icon: <Users className="h-10 w-10 text-primary" />,
-    outcome: "Comissões recorrentes mensais",
-  },
-  {
-    title: "Canais Monetizados",
-    description: "Crie conteúdo que gera renda enquanto você dorme.",
-    icon: <Youtube className="h-10 w-10 text-primary" />,
-    outcome: "Audiência engajada e monetizada",
-  },
-  {
-    title: "Plataformas de Renda Automática",
-    description: "Utilize plataformas prontas para criar fluxos de receita consistentes.",
-    icon: <Newspaper className="h-10 w-10 text-primary" />,
-    outcome: "Múltiplos canais de receita",
-  },
-  {
-    title: "Comunidades Pagas",
-    description: "Monetize seu conhecimento com grupos exclusivos e recorrentes.",
-    icon: <MessageSquare className="h-10 w-10 text-primary" />,
-    outcome: "Comunidade lucrativa e escalável",
-  },
-  {
-    title: "BÔNUS: Ecossistema Completo",
-    description: "Integre todas as fontes com plano de ação prático de 30/60/90 dias.",
-    icon: <Star className="h-10 w-10 text-primary" />,
-    outcome: "Liberdade financeira acelerada",
-  },
-] as const
-
-const BENEFITS: readonly Benefit[] = [
-  {
-    title: "Passo a Passo Detalhado",
-    description: "Instruções claras para iniciantes, sem necessidade de formação prévia em finanças ou empreendedorismo.",
-    icon: <Lightbulb className="h-12 w-12 text-primary" />,
-  },
-  {
-    title: "Baixo Investimento Inicial",
-    description: "Estratégias que podem ser iniciadas com apenas R$100-R$200, acessíveis para quem está começando.",
-    icon: <DollarSign className="h-12 w-12 text-primary" />,
-  },
-  {
-    title: "Exemplos Reais",
-    description: "Casos de estudo de Mariana, Carla, Lucas e Ana, pessoas comuns que implementaram estas estratégias.",
-    icon: <Users className="h-12 w-12 text-primary" />,
-  },
-  {
-    title: "Diversificação de Estratégias",
-    description: "Combinação de ativos financeiros, imobiliários e digitais para reduzir riscos e maximizar ganhos.",
-    icon: <TrendingUp className="h-12 w-12 text-primary" />,
-  },
-  {
-    title: "Ferramentas Recomendadas",
-    description: "Avaliação detalhada de plataformas, custos, taxas e prazos de retorno para cada estratégia.",
-    icon: <Zap className="h-12 w-12 text-primary" />,
-  },
-  {
-    title: "Plano de Ação Estruturado",
-    description: "Cronograma de 30/60/90 dias para implementação, com disciplina de estudo e monitoramento contínuo.",
-    icon: <Award className="h-12 w-12 text-primary" />,
-  },
-] as const
-
-const AUDIENCE_PROFILES: readonly AudienceProfile[] = [
-  {
-    title: "Iniciantes em Finanças",
-    description: "Pessoas sem formação prévia, mas com acesso a corretoras brasileiras (Clear, XP, NuInvest) e disposição para aprender.",
-    icon: <BookOpen className="h-10 w-10 text-primary" />,
-    ideal: true,
-  },
-  {
-    title: "Profissionais Assalariados",
-    description: "Gerentes de projetos, secretárias, engenheiros que buscam renda extra e liberdade financeira para sair da 'corrida dos ratos'.",
-    icon: <Users className="h-10 w-10 text-primary" />,
-    ideal: true,
-  },
-  {
-    title: "Criadores de Conteúdo",
-    description: "Nutricionistas, fotógrafos, infoprodutores interessados em monetizar habilidades via royalties, infoprodutos e afiliados.",
-    icon: <Video className="h-10 w-10 text-primary" />,
-    ideal: true,
-  },
-] as const
-
-const COMPARISON_DATA: readonly ComparisonRow[] = [
-  {
-    feature: "Fontes de Renda",
-    without: "Dependência de salário único",
-    with: "Múltiplas fontes de renda passiva",
-  },
-  {
-    feature: "Tempo Livre",
-    without: "Preso a horários fixos de trabalho",
-    with: "Liberdade para gerenciar seu tempo",
-  },
-  {
-    feature: "Conhecimento Financeiro",
-    without: "Limitado e sem direcionamento",
-    with: "Estratégias práticas e testadas",
-  },
-  {
-    feature: "Potencial de Ganhos",
-    without: "Limitado ao seu salário",
-    with: "Ilimitado e escalável",
-  },
-  {
-    feature: "Segurança Financeira",
-    without: "Vulnerável a demissões e crises",
-    with: "Protegido por múltiplas fontes de renda",
-  },
-  {
-    feature: "Plano de Ação",
-    without: "Tentativa e erro, sem direção",
-    with: "Estruturado em 30/60/90 dias",
-  },
-] as const
-
-const FAQ_DATA: readonly FAQ[] = [
-  {
-    question: "Preciso ter conhecimento prévio em investimentos?",
-    answer: "Não! O guia foi desenvolvido para iniciantes e inclui explicações detalhadas passo a passo, desde como abrir uma conta em corretora até estratégias mais avançadas. Não é necessário ter conhecimento prévio em investimentos ou negócios online.",
-  },
-  {
-    question: "Quanto capital inicial é necessário?",
-    answer: "Você pode começar com valores entre R$100 e R$200, especialmente para os capítulos sobre FIIs e investimentos em dividendos. O guia inclui opções para todos os orçamentos e explica como escalar a partir de um capital pequeno.",
-  },
-  {
-    question: "As estratégias funcionam para o mercado brasileiro?",
-    answer: "Sim! Todo o material, exemplos e plataformas citadas utilizam valores em reais e referências a mercados brasileiros, como corretoras Clear, XP e NuInvest, além de plataformas como Hotmart que são populares no Brasil.",
-  },
-  {
-    question: "Quanto tempo leva para ver resultados?",
-    answer: "O guia inclui um plano de ação estruturado de 30/60/90 dias. Alguns métodos, como dividendos e FIIs, começam a gerar resultados mensalmente. Outros, como infoprodutos e marketing de afiliados, podem gerar resultados mais rápidos, dependendo da sua implementação.",
-  },
-  {
-    question: "O que acontece após a compra?",
-    answer: "Após a confirmação do pagamento, você receberá imediatamente um e-mail com as instruções de acesso ao material digital. O download estará disponível instantaneamente.",
-  },
-  {
-    question: "Existe garantia de resultados?",
-    answer: "Oferecemos uma garantia de satisfação de 7 dias. Se você não ficar satisfeito com o conteúdo, pode solicitar reembolso total dentro deste período, sem questionamentos.",
-  },
-] as const
-
-const HERO_BENEFITS = [
-  "Comece com apenas R$100-R$200 de investimento inicial",
-  "Passo a passo detalhado para iniciantes sem experiência prévia",
-  "8 métodos comprovados + plano de ação de 30/60/90 dias",
-  "Exemplos reais de pessoas comuns que implementaram as estratégias",
-] as const
-
-const PROBLEM_LIST = [
-  "Depender exclusivamente do seu salário mensal?",
-  "Trabalhar horas intermináveis para outras pessoas?",
-  "Ver seu dinheiro parado sem gerar retorno?",
-  "Não ter tempo para aproveitar a vida com sua família?",
-  "Sentir que está preso na 'corrida dos ratos'?",
-  "Ter medo de perder seu emprego e ficar sem renda?",
-  "Não conseguir realizar seus sonhos por falta de dinheiro?",
-  "Ver outras pessoas conquistando liberdade financeira enquanto você fica para trás?",
-] as const
-
-const SOLUTION_LIST = [
-  "Construa múltiplas fontes de renda que trabalham para você 24h/dia",
-  "Comece com apenas R$100-R$200 de investimento inicial",
-  "Siga um plano de ação estruturado de 30/60/90 dias",
-  "Aprenda estratégias testadas e aprovadas por centenas de pessoas",
-  "Diversifique seus investimentos para reduzir riscos",
-  "Automatize seus ganhos para ter mais tempo livre",
-  "Conquiste a verdadeira liberdade financeira",
-  "Tenha a segurança de nunca mais depender apenas do seu salário",
-] as const
-
-/* -------------------------------------------------------------------------- */
-/*                             Main Page component                            */
-/* -------------------------------------------------------------------------- */
-
-export default function LandingPage(): JSX.Element {
-  /* -------------------------------- State -------------------------------- */
-  const [activeTestimonial, setActiveTestimonial] = useState<number>(0)
-
-  /* ------------------------------ Data memo ------------------------------ */
-  const displayedTestimonials = useMemo(() => 
-    shuffleArray(ALL_TESTIMONIALS).slice(0, 3), 
-    []
-  )
-
-  const offerDeadline = useMemo(() => 
-    new Date(Date.now() + COUNTDOWN_DURATION), 
-    []
-  )
-
-  /* ---------------------------- Event handlers --------------------------- */
-  const handleTestimonialChange = useCallback((index: number) => {
-    setActiveTestimonial(index)
-  }, [])
-
-  const preventContextMenu = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-  }, [])
-
-  /* ---------------------------- Effects --------------------------- */
   useEffect(() => {
+    // Função para embaralhar o array
+    const shuffleArray = (array) => {
+      const shuffled = [...array]
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      }
+      return shuffled
+    }
+
+    // Seleciona 3 depoimentos aleatórios
+    const randomTestimonials = shuffleArray(allTestimonials).slice(0, 3)
+    setDisplayedTestimonials(randomTestimonials)
+  }, [])
+
+  useEffect(() => {
+    if (displayedTestimonials.length === 0) return
+
     const interval = setInterval(() => {
       setActiveTestimonial((prev) => (prev + 1) % displayedTestimonials.length)
-    }, TESTIMONIAL_ROTATION_INTERVAL)
-
+    }, 5000)
     return () => clearInterval(interval)
   }, [displayedTestimonials.length])
 
-  /* -------------------------------- Render -------------------------------- */
+  // Função para sanitizar texto antes de exibir
+  const sanitize = (text: string) => {
+    return { __html: sanitizeInput(text) }
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground overflow-x-hidden">
       {/* Sticky Header */}
@@ -505,19 +208,13 @@ export default function LandingPage(): JSX.Element {
         className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur-sm"
       >
         <div className="container flex h-16 items-center justify-between px-4 md:px-6">
-          <Link 
-            href="/" 
-            className="flex items-center gap-2 font-bold text-xl text-primary"
-            aria-label="Ir para página inicial do Lucro Automático"
-          >
-            <Wallet className="h-6 w-6" aria-hidden="true" />
+          <div className="flex items-center gap-2 font-bold text-xl text-primary">
+            <Wallet className="h-6 w-6" />
             <span>Lucro Automático</span>
-          </Link>
+          </div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <a href={PURCHASE_URL} aria-label="Comprar o Guia Definitivo do Lucro Automático">
-                Comprar Agora
-              </a>
+              <a href="https://payments.clickmax.io/rRoJNHDAJj">Comprar Agora</a>
             </Button>
           </motion.div>
         </div>
@@ -527,7 +224,7 @@ export default function LandingPage(): JSX.Element {
         {/* Hero Section */}
         <section className="relative py-12 md:py-20 overflow-hidden">
           {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-5" aria-hidden="true">
+          <div className="absolute inset-0 opacity-5">
             <div
               className="absolute inset-0"
               style={{
@@ -535,7 +232,7 @@ export default function LandingPage(): JSX.Element {
                   "url(\"data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fillOpacity='1' fillRule='evenodd'%3E%3Ccircle cx='3' cy='3' r='1'/%3E%3C/g%3E%3C/svg%3E\")",
                 backgroundSize: "20px 20px",
               }}
-            />
+            ></div>
           </div>
 
           <div className="container relative mx-auto px-4">
@@ -572,28 +269,32 @@ export default function LandingPage(): JSX.Element {
                 className="md:col-span-3 space-y-6"
               >
                 <motion.div variants={fadeInUp} className="flex items-center gap-2 text-primary mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="fill-primary h-5 w-5" aria-hidden="true" />
-                  ))}
+                  <Star className="fill-primary" />
+                  <Star className="fill-primary" />
+                  <Star className="fill-primary" />
+                  <Star className="fill-primary" />
+                  <Star className="fill-primary" />
                   <span className="text-sm text-muted-foreground ml-1">(237 avaliações verificadas)</span>
                 </motion.div>
 
                 <motion.div variants={staggerContainer} className="space-y-4">
-                  {HERO_BENEFITS.map((item, i) => (
+                  {[
+                    "Comece com apenas R$100-R$200 de investimento inicial",
+                    "Passo a passo detalhado para iniciantes sem experiência prévia",
+                    "8 métodos comprovados + plano de ação de 30/60/90 dias",
+                    "Exemplos reais de pessoas comuns que implementaram as estratégias",
+                  ].map((item, i) => (
                     <motion.div key={i} variants={fadeInUp} className="flex items-start gap-2">
                       <div className="mt-1 rounded-full bg-primary/20 p-1">
-                        <Check className="h-4 w-4 text-primary" aria-hidden="true" />
+                        <Check className="h-4 w-4 text-primary" />
                       </div>
                       <p className="text-lg">{item}</p>
                     </motion.div>
                   ))}
                 </motion.div>
 
-                <motion.div
-                  variants={fadeInUp}
-                  className="flex flex-col md:flex-row gap-4 p-4 rounded-lg border border-primary/30 bg-primary/5"
-                >
-                  <div className="flex-1 text-center">
+                <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4 mt-8">
+                  <div className="flex-1 flex flex-col items-center justify-center p-4 rounded-lg border border-border bg-secondary/50">
                     <p className="text-sm text-muted-foreground">Preço Normal</p>
                     <p className="text-2xl font-bold line-through text-muted-foreground">R$98,00</p>
                   </div>
@@ -607,6 +308,7 @@ export default function LandingPage(): JSX.Element {
                     <p className="text-sm text-primary">Hoje Apenas</p>
                     <p className="text-3xl font-bold text-primary">R$9,90</p>
                   </motion.div>
+                  {/* Add a smaller version of the countdown timer */}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -614,7 +316,7 @@ export default function LandingPage(): JSX.Element {
                     className="w-full mt-4"
                   >
                     <CountdownTimer
-                      targetDate={offerDeadline}
+                      targetDate={new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)}
                       className="scale-75 transform origin-top"
                     />
                   </motion.div>
@@ -626,13 +328,9 @@ export default function LandingPage(): JSX.Element {
                     size="lg"
                     className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-lg h-14 animate-pulse"
                   >
-                    <a 
-                      href={PURCHASE_URL} 
-                      className="flex items-center justify-center gap-2"
-                      aria-label="Comprar o Guia para Gerar Renda Passiva"
-                    >
+                    <a href="https://payments.clickmax.io/rRoJNHDAJj" className="flex items-center justify-center gap-2">
                       <span>QUERO GERAR RENDA PASSIVA</span>
-                      <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                      <ArrowRight className="h-5 w-5" />
                     </a>
                   </Button>
                 </motion.div>
@@ -642,15 +340,15 @@ export default function LandingPage(): JSX.Element {
                   className="flex items-center justify-center gap-4 text-sm text-muted-foreground"
                 >
                   <div className="flex items-center gap-1">
-                    <Lock className="h-4 w-4" aria-hidden="true" />
+                    <Lock className="h-4 w-4" />
                     <span>Pagamento Seguro</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                    <ShieldCheck className="h-4 w-4" />
                     <span>Garantia de 7 Dias</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Download className="h-4 w-4" aria-hidden="true" />
+                    <Download className="h-4 w-4" />
                     <span>Acesso Imediato</span>
                   </div>
                 </motion.div>
@@ -662,7 +360,7 @@ export default function LandingPage(): JSX.Element {
                 transition={{ duration: 0.8, delay: 0.3 }}
                 className="md:col-span-2 relative"
               >
-                <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary/50 to-primary/30 opacity-70 blur-lg" aria-hidden="true"></div>
+                <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary/50 to-primary/30 opacity-70 blur-lg"></div>
                 <motion.div
                   whileHover={{ scale: 1.03 }}
                   transition={{ duration: 0.3 }}
@@ -675,7 +373,7 @@ export default function LandingPage(): JSX.Element {
                     alt="Capa do E-book Guia Definitivo do Lucro Automático"
                     className="w-full object-cover"
                     priority
-                    onContextMenu={preventContextMenu}
+                    onContextMenu={(e) => e.preventDefault()}
                     draggable="false"
                   />
                   <motion.div
@@ -696,7 +394,7 @@ export default function LandingPage(): JSX.Element {
               transition={{ delay: 1.2, duration: 0.5 }}
               className="flex justify-center mt-12"
             >
-              <ArrowDown className="h-10 w-10 text-primary animate-bounce" aria-hidden="true" />
+              <ArrowDown className="h-10 w-10 text-primary animate-bounce" />
             </motion.div>
           </div>
         </section>
@@ -746,14 +444,23 @@ export default function LandingPage(): JSX.Element {
               </motion.h2>
 
               <motion.div variants={staggerContainer} className="grid md:grid-cols-2 gap-4">
-                {PROBLEM_LIST.map((item, i) => (
+                {[
+                  "Depender exclusivamente do seu salário mensal?",
+                  "Trabalhar horas intermináveis para outras pessoas?",
+                  "Ver seu dinheiro parado sem gerar retorno?",
+                  "Não ter tempo para aproveitar a vida com sua família?",
+                  "Sentir que está preso na 'corrida dos ratos'?",
+                  "Ter medo de perder seu emprego e ficar sem renda?",
+                  "Não conseguir realizar seus sonhos por falta de dinheiro?",
+                  "Ver outras pessoas conquistando liberdade financeira enquanto você fica para trás?",
+                ].map((item, i) => (
                   <motion.div
                     key={i}
                     variants={fadeInUp}
                     whileHover={{ scale: 1.02 }}
                     className="flex items-start gap-2 text-left p-3 rounded-lg border border-border bg-secondary/30"
                   >
-                    <X className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
+                    <X className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
                     <p>{item}</p>
                   </motion.div>
                 ))}
@@ -771,14 +478,23 @@ export default function LandingPage(): JSX.Element {
               </motion.div>
 
               <motion.div variants={staggerContainer} className="grid md:grid-cols-2 gap-4">
-                {SOLUTION_LIST.map((item, i) => (
+                {[
+                  "Construa múltiplas fontes de renda que trabalham para você 24h/dia",
+                  "Comece com apenas R$100-R$200 de investimento inicial",
+                  "Siga um plano de ação estruturado de 30/60/90 dias",
+                  "Aprenda estratégias testadas e aprovadas por centenas de pessoas",
+                  "Diversifique seus investimentos para reduzir riscos",
+                  "Automatize seus ganhos para ter mais tempo livre",
+                  "Conquiste a verdadeira liberdade financeira",
+                  "Tenha a segurança de nunca mais depender apenas do seu salário",
+                ].map((item, i) => (
                   <motion.div
                     key={i}
                     variants={fadeInUp}
                     whileHover={{ scale: 1.02 }}
                     className="flex items-start gap-2 text-left p-3 rounded-lg border border-primary/30 bg-primary/5"
                   >
-                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" aria-hidden="true" />
+                    <Check className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                     <p>{item}</p>
                   </motion.div>
                 ))}
@@ -806,13 +522,9 @@ export default function LandingPage(): JSX.Element {
               className="mt-12 text-center"
             >
               <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90" size="lg">
-                <a 
-                  href={PURCHASE_URL} 
-                  className="flex items-center gap-2"
-                  aria-label="Aprender com o especialista comprando o guia"
-                >
+                <a href="https://payments.clickmax.io/rRoJNHDAJj" className="flex items-center gap-2">
                   <span>Quero Aprender com o Especialista</span>
-                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                  <ArrowRight className="h-5 w-5" />
                 </a>
               </Button>
             </motion.div>
@@ -841,7 +553,7 @@ export default function LandingPage(): JSX.Element {
                 >
                   {displayedTestimonials.map((testimonial, index) => (
                     <motion.div
-                      key={`${testimonial.name}-${index}`}
+                      key={index}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1, duration: 0.5 }}
@@ -860,13 +572,13 @@ export default function LandingPage(): JSX.Element {
                         {Array(testimonial.stars)
                           .fill(0)
                           .map((_, i) => (
-                            <Star key={i} className="h-4 w-4 fill-primary" aria-hidden="true" />
+                            <Star key={i} className="h-4 w-4 fill-primary" />
                           ))}
                       </div>
                       <p
                         className="text-muted-foreground mb-4"
                         dangerouslySetInnerHTML={sanitize(`"${testimonial.text}"`)}
-                      />
+                      ></p>
                       <div className="flex items-center gap-3">
                         <div className="rounded-full bg-primary/20 p-2 text-primary font-bold">
                           {testimonial.name
@@ -888,10 +600,8 @@ export default function LandingPage(): JSX.Element {
                 {displayedTestimonials.map((_, index) => (
                   <button
                     key={index}
-                    onClick={() => handleTestimonialChange(index)}
-                    className={`w-3 h-3 rounded-full transition-colors ${
-                      index === activeTestimonial ? "bg-primary" : "bg-primary/30"
-                    }`}
+                    onClick={() => setActiveTestimonial(index)}
+                    className={`w-3 h-3 rounded-full ${index === activeTestimonial ? "bg-primary" : "bg-primary/30"}`}
                     aria-label={`Ver depoimento ${index + 1}`}
                   />
                 ))}
@@ -905,13 +615,9 @@ export default function LandingPage(): JSX.Element {
               className="mt-8 text-center"
             >
               <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <a 
-                  href={PURCHASE_URL} 
-                  className="flex items-center gap-2"
-                  aria-label="Obter resultados como os apresentados nos depoimentos"
-                >
+                <a href="https://payments.clickmax.io/rRoJNHDAJj" className="flex items-center gap-2">
                   <span>Quero Resultados Como Esses</span>
-                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                  <ArrowRight className="h-5 w-5" />
                 </a>
               </Button>
             </motion.div>
@@ -928,7 +634,64 @@ export default function LandingPage(): JSX.Element {
               </p>
             </motion.div>
 
-            <ModuleCarousel modules={MODULES} />
+            <ModuleCarousel
+              modules={[
+                {
+                  title: "Investimentos em Dividendos e FIIs",
+                  description: "Comece a receber renda mensal com investimentos a partir de R$100.",
+                  icon: <BookText className="h-10 w-10 text-primary" />,
+                  outcome: "Carteira gerando dividendos mensais",
+                },
+                {
+                  title: "Imóveis para Aluguel",
+                  description: "Maximize retornos com propriedades físicas e digitais sem complicações.",
+                  icon: <Building className="h-10 w-10 text-primary" />,
+                  outcome: "Renda passiva imobiliária otimizada",
+                },
+                {
+                  title: "Royalties",
+                  description: "Crie uma vez, receba para sempre com eBooks, músicas e designs.",
+                  icon: <Music className="h-10 w-10 text-primary" />,
+                  outcome: "Fluxo contínuo de royalties",
+                },
+                {
+                  title: "Infoprodutos",
+                  description: "Transforme seu conhecimento em produtos digitais que vendem 24/7.",
+                  icon: <Video className="h-10 w-10 text-primary" />,
+                  outcome: "Sistema de vendas automatizado",
+                },
+                {
+                  title: "Marketing de Afiliados",
+                  description: "Ganhe comissões promovendo produtos em que você acredita.",
+                  icon: <Users className="h-10 w-10 text-primary" />,
+                  outcome: "Comissões recorrentes mensais",
+                },
+                {
+                  title: "Canais Monetizados",
+                  description: "Crie conteúdo que gera renda enquanto você dorme.",
+                  icon: <Youtube className="h-10 w-10 text-primary" />,
+                  outcome: "Audiência engajada e monetizada",
+                },
+                {
+                  title: "Plataformas de Renda Automática",
+                  description: "Utilize plataformas prontas para criar fluxos de receita consistentes.",
+                  icon: <Newspaper className="h-10 w-10 text-primary" />,
+                  outcome: "Múltiplos canais de receita",
+                },
+                {
+                  title: "Comunidades Pagas",
+                  description: "Monetize seu conhecimento com grupos exclusivos e recorrentes.",
+                  icon: <MessageSquare className="h-10 w-10 text-primary" />,
+                  outcome: "Comunidade lucrativa e escalável",
+                },
+                {
+                  title: "BÔNUS: Ecossistema Completo",
+                  description: "Integre todas as fontes com plano de ação prático de 30/60/90 dias.",
+                  icon: <Star className="h-10 w-10 text-primary" />,
+                  outcome: "Liberdade financeira acelerada",
+                },
+              ]}
+            />
 
             <motion.div
               variants={fadeInUp}
@@ -937,13 +700,9 @@ export default function LandingPage(): JSX.Element {
               className="mt-16 text-center"
             >
               <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <a 
-                  href={PURCHASE_URL} 
-                  className="flex items-center gap-2"
-                  aria-label="Dominar todas as estratégias de renda passiva"
-                >
+                <a href="https://payments.clickmax.io/rRoJNHDAJj" className="flex items-center gap-2">
                   <span>Quero Dominar Essas Estratégias</span>
-                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                  <ArrowRight className="h-5 w-5" />
                 </a>
               </Button>
             </motion.div>
@@ -963,9 +722,46 @@ export default function LandingPage(): JSX.Element {
             </motion.div>
 
             <motion.div variants={staggerContainer} className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {BENEFITS.map((benefit, index) => (
+              {[
+                {
+                  title: "Passo a Passo Detalhado",
+                  description:
+                    "Instruções claras para iniciantes, sem necessidade de formação prévia em finanças ou empreendedorismo.",
+                  icon: <Lightbulb className="h-12 w-12 text-primary" />,
+                },
+                {
+                  title: "Baixo Investimento Inicial",
+                  description:
+                    "Estratégias que podem ser iniciadas com apenas R$100-R$200, acessíveis para quem está começando.",
+                  icon: <DollarSign className="h-12 w-12 text-primary" />,
+                },
+                {
+                  title: "Exemplos Reais",
+                  description:
+                    "Casos de estudo de Mariana, Carla, Lucas e Ana, pessoas comuns que implementaram estas estratégias.",
+                  icon: <Users className="h-12 w-12 text-primary" />,
+                },
+                {
+                  title: "Diversificação de Estratégias",
+                  description:
+                    "Combinação de ativos financeiros, imobiliários e digitais para reduzir riscos e maximizar ganhos.",
+                  icon: <TrendingUp className="h-12 w-12 text-primary" />,
+                },
+                {
+                  title: "Ferramentas Recomendadas",
+                  description:
+                    "Avaliação detalhada de plataformas, custos, taxas e prazos de retorno para cada estratégia.",
+                  icon: <Zap className="h-12 w-12 text-primary" />,
+                },
+                {
+                  title: "Plano de Ação Estruturado",
+                  description:
+                    "Cronograma de 30/60/90 dias para implementação, com disciplina de estudo e monitoramento contínuo.",
+                  icon: <Award className="h-12 w-12 text-primary" />,
+                },
+              ].map((benefit, index) => (
                 <motion.div
-                  key={benefit.title}
+                  key={index}
                   variants={fadeInUp}
                   whileHover={{ scale: 1.05, y: -5 }}
                   className="flex flex-col items-center text-center p-6 rounded-xl border border-border bg-background"
@@ -998,9 +794,31 @@ export default function LandingPage(): JSX.Element {
             </motion.div>
 
             <motion.div variants={staggerContainer} className="grid gap-8 md:grid-cols-3">
-              {AUDIENCE_PROFILES.map((audience, index) => (
+              {[
+                {
+                  title: "Iniciantes em Finanças",
+                  description:
+                    "Pessoas sem formação prévia, mas com acesso a corretoras brasileiras (Clear, XP, NuInvest) e disposição para aprender.",
+                  icon: <BookOpen className="h-10 w-10 text-primary" />,
+                  ideal: true,
+                },
+                {
+                  title: "Profissionais Assalariados",
+                  description:
+                    "Gerentes de projetos, secretárias, engenheiros que buscam renda extra e liberdade financeira para sair da 'corrida dos ratos'.",
+                  icon: <Users className="h-10 w-10 text-primary" />,
+                  ideal: true,
+                },
+                {
+                  title: "Criadores de Conteúdo",
+                  description:
+                    "Nutricionistas, fotógrafos, infoprodutores interessados em monetizar habilidades via royalties, infoprodutos e afiliados.",
+                  icon: <Video className="h-10 w-10 text-primary" />,
+                  ideal: true,
+                },
+              ].map((audience, index) => (
                 <motion.div
-                  key={audience.title}
+                  key={index}
                   variants={fadeInUp}
                   whileHover={{ scale: 1.05, y: -5 }}
                   className={`rounded-xl border p-6 shadow-sm transition-all hover:shadow-md ${
@@ -1042,13 +860,9 @@ export default function LandingPage(): JSX.Element {
               className="mt-12 text-center"
             >
               <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <a 
-                  href={PURCHASE_URL} 
-                  className="flex items-center gap-2"
-                  aria-label="Começar agora a jornada para renda passiva"
-                >
+                <a href="https://payments.clickmax.io/rRoJNHDAJj" className="flex items-center gap-2">
                   <span>Quero Começar Agora</span>
-                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                  <ArrowRight className="h-5 w-5" />
                 </a>
               </Button>
             </motion.div>
@@ -1080,8 +894,39 @@ export default function LandingPage(): JSX.Element {
                   <p className="font-medium text-primary">Com o Guia</p>
                 </div>
 
-                {COMPARISON_DATA.map((row, i) => (
-                  <React.Fragment key={row.feature}>
+                {[
+                  {
+                    feature: "Fontes de Renda",
+                    without: "Dependência de salário único",
+                    with: "Múltiplas fontes de renda passiva",
+                  },
+                  {
+                    feature: "Tempo Livre",
+                    without: "Preso a horários fixos de trabalho",
+                    with: "Liberdade para gerenciar seu tempo",
+                  },
+                  {
+                    feature: "Conhecimento Financeiro",
+                    without: "Limitado e sem direcionamento",
+                    with: "Estratégias práticas e testadas",
+                  },
+                  {
+                    feature: "Potencial de Ganhos",
+                    without: "Limitado ao seu salário",
+                    with: "Ilimitado e escalável",
+                  },
+                  {
+                    feature: "Segurança Financeira",
+                    without: "Vulnerável a demissões e crises",
+                    with: "Protegido por múltiplas fontes de renda",
+                  },
+                  {
+                    feature: "Plano de Ação",
+                    without: "Tentativa e erro, sem direção",
+                    with: "Estruturado em 30/60/90 dias",
+                  },
+                ].map((row, i) => (
+                  <React.Fragment key={i}>
                     <motion.div
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
@@ -1099,7 +944,7 @@ export default function LandingPage(): JSX.Element {
                       className="p-4 bg-background border-b border-r border-border"
                     >
                       <div className="flex items-center gap-2">
-                        <X className="h-4 w-4 text-red-500" aria-hidden="true" />
+                        <X className="h-4 w-4 text-red-500" />
                         <p className="text-sm text-muted-foreground">{row.without}</p>
                       </div>
                     </motion.div>
@@ -1111,7 +956,7 @@ export default function LandingPage(): JSX.Element {
                       className="p-4 bg-primary/10 border-b border-border"
                     >
                       <div className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-primary" aria-hidden="true" />
+                        <Check className="h-4 w-4 text-primary" />
                         <p className="text-sm">{row.with}</p>
                       </div>
                     </motion.div>
@@ -1141,8 +986,7 @@ export default function LandingPage(): JSX.Element {
                     repeatType: "reverse",
                   }}
                   className="absolute top-0 right-0 w-32 h-32 -mt-8 -mr-8 bg-primary/20 rounded-full blur-xl"
-                  aria-hidden="true"
-                />
+                ></motion.div>
                 <div className="relative z-10">
                   <div className="flex flex-col md:flex-row gap-6 items-center">
                     <motion.div
@@ -1153,7 +997,7 @@ export default function LandingPage(): JSX.Element {
                       className="flex-shrink-0"
                     >
                       <div className="w-32 h-32 rounded-full bg-primary/20 flex items-center justify-center">
-                        <ShieldCheck className="h-16 w-16 text-primary" aria-hidden="true" />
+                        <ShieldCheck className="h-16 w-16 text-primary" />
                       </div>
                     </motion.div>
                     <div>
@@ -1182,6 +1026,7 @@ export default function LandingPage(): JSX.Element {
                 Comece Sua Jornada Para a Liberdade Financeira Hoje
               </motion.h2>
 
+              {/* Add the CountdownTimer here */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -1189,7 +1034,7 @@ export default function LandingPage(): JSX.Element {
                 className="mb-8"
               >
                 <CountdownTimer
-                  targetDate={offerDeadline}
+                  targetDate={new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)}
                   className="p-4 rounded-xl border border-primary/30 bg-primary/5 inline-block mx-auto"
                 />
               </motion.div>
@@ -1208,24 +1053,46 @@ export default function LandingPage(): JSX.Element {
                   <div className="text-left">
                     <h3 className="text-2xl font-bold mb-2">Guia Definitivo do Lucro Automático</h3>
                     <ul className="space-y-2">
-                      {[
-                        "8 métodos comprovados de renda passiva",
-                        "Plano de ação de 30/60/90 dias",
-                        "Exemplos reais e estudos de caso",
-                        "Acesso imediato após o pagamento",
-                      ].map((item, i) => (
-                        <motion.li
-                          key={item}
-                          initial={{ opacity: 0, x: -20 }}
-                          whileInView={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.1 * (i + 1) }}
-                          viewport={{ once: true }}
-                          className="flex items-center gap-2"
-                        >
-                          <Check className="h-5 w-5 text-primary" aria-hidden="true" />
-                          <span>{item}</span>
-                        </motion.li>
-                      ))}
+                      <motion.li
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 }}
+                        viewport={{ once: true }}
+                        className="flex items-center gap-2"
+                      >
+                        <Check className="h-5 w-5 text-primary" />
+                        <span>8 métodos comprovados de renda passiva</span>
+                      </motion.li>
+                      <motion.li
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.2 }}
+                        viewport={{ once: true }}
+                        className="flex items-center gap-2"
+                      >
+                        <Check className="h-5 w-5 text-primary" />
+                        <span>Plano de ação de 30/60/90 dias</span>
+                      </motion.li>
+                      <motion.li
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.3 }}
+                        viewport={{ once: true }}
+                        className="flex items-center gap-2"
+                      >
+                        <Check className="h-5 w-5 text-primary" />
+                        <span>Exemplos reais e estudos de caso</span>
+                      </motion.li>
+                      <motion.li
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 }}
+                        viewport={{ once: true }}
+                        className="flex items-center gap-2"
+                      >
+                        <Check className="h-5 w-5 text-primary" />
+                        <span>Acesso imediato após o pagamento</span>
+                      </motion.li>
                     </ul>
                   </div>
 
@@ -1251,21 +1118,24 @@ export default function LandingPage(): JSX.Element {
                     className="bg-primary/10 rounded-lg p-4 border-l-4 border-primary"
                   >
                     <h3 className="font-bold text-primary flex items-center gap-2 mb-2">
-                      <Wallet className="h-5 w-5" aria-hidden="true" />
+                      <Wallet className="h-5 w-5" />
                       Pagamento via PIX (Recomendado)
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4">
                       Acesso imediato após confirmação do pagamento
                     </p>
                     <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-                      <Button
-                        asChild
-                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-14 text-lg animate-pulse"
+                      <Link
+                        href="https://payments.clickmax.io/rRoJNHDAJj"
+                        passHref
                       >
-                        <a href={PURCHASE_URL} aria-label="Comprar agora com PIX">
-                          COMPRAR AGORA COM PIX
-                        </a>
-                      </Button>
+                        <Button
+                          asChild
+                          className="w-full bg-primary text-primary-foreground hover:bg-primary/90 h-14 text-lg animate-pulse"
+                        >
+                          <a>COMPRAR AGORA COM PIX</a>
+                        </Button>
+                      </Link>
                     </motion.div>
                   </motion.div>
 
@@ -1275,7 +1145,7 @@ export default function LandingPage(): JSX.Element {
                     className="bg-secondary rounded-lg p-4 border-l-4 border-muted"
                   >
                     <h3 className="font-bold flex items-center gap-2 mb-2">
-                      <CreditCard className="h-5 w-5" aria-hidden="true" />
+                      <CreditCard className="h-5 w-5" />
                       Cartão de Crédito
                     </h3>
                     <p className="text-sm text-muted-foreground mb-4">
