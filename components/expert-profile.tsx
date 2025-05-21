@@ -23,7 +23,7 @@ export function ExpertProfile({ className = "" }: ExpertProfileProps) {
           <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-primary/50 to-primary/30 opacity-70 blur-lg"></div>
           <div className="relative rounded-xl overflow-hidden border-2 border-primary/50">
             <Image
-              src="https://i.postimg.cc/43Ymzx1g/ricardo-almeida1.png"
+              src="https://i.postimg.cc/BQvgdxSc/ricardo-almeida1.webp"
               width={600}
               height={600}
               alt="Ricardo Almeida - Especialista em Renda Passiva"
