@@ -68,12 +68,16 @@ export function ModuleCarousel({ modules }: ModuleCarouselProps) {
   }, [])
 
   const handleNext = useCallback(() => {
-    setCurrentIndex((prevIndex) => Math.min(prevIndex + 1, totalModules - visibleCount))
-  }, [totalModules, visibleCount])
+    const numPages = totalModules - visibleCount + 1;
+    if (numPages <= 1) return; // No looping if not enough pages
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % numPages);
+  }, [totalModules, visibleCount, setCurrentIndex]);
 
   const handlePrev = useCallback(() => {
-    setCurrentIndex((prevIndex) => Math.max(prevIndex - 1, 0))
-  }, [])
+    const numPages = totalModules - visibleCount + 1;
+    if (numPages <= 1) return; // No looping if not enough pages
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + numPages) % numPages);
+  }, [totalModules, visibleCount, setCurrentIndex]);
 
   const handleDotClick = useCallback(
     (index: number) => {
@@ -112,10 +116,10 @@ export function ModuleCarousel({ modules }: ModuleCarouselProps) {
         variant="outline"
         size="icon"
         className={`absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 rounded-full bg-background border border-primary/30 shadow-md ${
-          currentIndex === 0 ? "opacity-50 cursor-not-allowed" : "opacity-100"
+          (totalModules - visibleCount + 1) <= 1 ? "opacity-50 cursor-not-allowed" : "opacity-100"
         }`}
         onClick={handlePrev}
-        disabled={currentIndex === 0}
+        disabled={(totalModules - visibleCount + 1) <= 1}
       >
         <ChevronLeft className="h-5 w-5" />
       </Button>
@@ -124,10 +128,10 @@ export function ModuleCarousel({ modules }: ModuleCarouselProps) {
         variant="outline"
         size="icon"
         className={`absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 rounded-full bg-background border border-primary/30 shadow-md ${
-          currentIndex >= totalModules - visibleCount ? "opacity-50 cursor-not-allowed" : "opacity-100"
+          (totalModules - visibleCount + 1) <= 1 ? "opacity-50 cursor-not-allowed" : "opacity-100"
         }`}
         onClick={handleNext}
-        disabled={currentIndex >= totalModules - visibleCount}
+        disabled={(totalModules - visibleCount + 1) <= 1}
       >
         <ChevronRight className="h-5 w-5" />
       </Button>
