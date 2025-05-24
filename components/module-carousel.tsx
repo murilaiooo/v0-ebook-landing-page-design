@@ -48,7 +48,6 @@ interface ModuleCarouselProps {
 export function ModuleCarousel({ modules }: ModuleCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [visibleCount, setVisibleCount] = useState(3)
-  const [autoplay, setAutoplay] = useState(true)
   const totalModules = modules.length
 
   // Determine how many cards to show based on screen size
@@ -68,30 +67,16 @@ export function ModuleCarousel({ modules }: ModuleCarouselProps) {
     return () => window.removeEventListener("resize", handleResize)
   }, [])
 
-  // Autoplay functionality
-  useEffect(() => {
-    if (!autoplay) return
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % (totalModules - visibleCount + 1))
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [autoplay, totalModules, visibleCount])
-
   const handleNext = useCallback(() => {
-    setAutoplay(false)
     setCurrentIndex((prevIndex) => Math.min(prevIndex + 1, totalModules - visibleCount))
   }, [totalModules, visibleCount])
 
   const handlePrev = useCallback(() => {
-    setAutoplay(false)
     setCurrentIndex((prevIndex) => Math.max(prevIndex - 1, 0))
   }, [])
 
   const handleDotClick = useCallback(
     (index: number) => {
-      setAutoplay(false)
       setCurrentIndex(Math.min(index, totalModules - visibleCount))
     },
     [totalModules, visibleCount],
@@ -160,17 +145,7 @@ export function ModuleCarousel({ modules }: ModuleCarouselProps) {
           />
         ))}
       </div>
-
-      {/* Pause/Resume button for module carousel autoplay accessibility */}
-      <div className="mt-4 text-center">
-        <button
-          onClick={() => setAutoplay(prev => !prev)}
-          className="text-sm text-muted-foreground underline hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 p-2"
-          aria-live="polite" // Announce changes to screen readers
-        >
-          {autoplay ? "Pausar Rolagem Automática" : "Iniciar Rolagem Automática"}
-        </button>
-      </div>
+      {/* Pause/Resume button removed as autoplay is disabled */}
     </div>
   )
 }
