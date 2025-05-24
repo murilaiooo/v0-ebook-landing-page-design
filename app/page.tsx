@@ -13,6 +13,8 @@ import {
   ArrowDown,
   ArrowRight,
   BookOpen,
+  ChevronLeft, // Added
+  ChevronRight, // Added
   ChevronDown,
   Clock,
   CreditCard,
@@ -189,6 +191,18 @@ export default function LandingPage() {
 
   // useEffect for autoplay was here - removed to disable autoplay.
   // Navigation is now manual via dot indicators.
+
+  const handlePrevTestimonial = () => {
+    setActiveTestimonial((prev) =>
+      prev === 0 ? displayedTestimonials.length - 1 : prev - 1
+    );
+  };
+
+  const handleNextTestimonial = () => {
+    setActiveTestimonial((prev) =>
+      prev === displayedTestimonials.length - 1 ? 0 : prev + 1
+    );
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground overflow-x-hidden">
@@ -534,6 +548,19 @@ export default function LandingPage() {
             </motion.div>
 
             <div className="relative overflow-hidden">
+              {/* Previous Testimonial Button */}
+              {displayedTestimonials.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-10 bg-background/50 hover:bg-background/80 border-primary/30 shadow-md rounded-full disabled:opacity-50"
+                  onClick={handlePrevTestimonial}
+                  aria-label="Depoimento Anterior"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+              )}
+
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTestimonial}
@@ -595,6 +622,19 @@ export default function LandingPage() {
                   />
                 ))}
               </div>
+
+              {/* Next Testimonial Button */}
+              {displayedTestimonials.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-10 bg-background/50 hover:bg-background/80 border-primary/30 shadow-md rounded-full disabled:opacity-50"
+                  onClick={handleNextTestimonial}
+                  aria-label="Próximo Depoimento"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              )}
             </div>
 
             <motion.div
