@@ -105,8 +105,6 @@ const AnimatedSection = ({ children, className, delay = 0 }) => {
 export default function LandingPage() {
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [displayedTestimonials, setDisplayedTestimonials] = useState([])
-  // State for managing testimonial carousel autoplay pause/resume for accessibility
-  const [isTestimonialAutoplayPaused, setIsTestimonialAutoplayPaused] = useState(false)
   const allTestimonials = [
     {
       name: "Mariana",
@@ -189,16 +187,8 @@ export default function LandingPage() {
     setDisplayedTestimonials(randomTestimonials)
   }, [])
 
-  useEffect(() => {
-    if (displayedTestimonials.length === 0 || isTestimonialAutoplayPaused) {
-      return // Do nothing if paused or no testimonials
-    }
-
-    const interval = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % displayedTestimonials.length)
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [displayedTestimonials.length, isTestimonialAutoplayPaused]) // Add isTestimonialAutoplayPaused to dependency array
+  // useEffect for autoplay was here - removed to disable autoplay.
+  // Navigation is now manual via dot indicators.
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground overflow-x-hidden">
@@ -604,16 +594,6 @@ export default function LandingPage() {
                     aria-label={`Ver depoimento ${index + 1}`}
                   />
                 ))}
-              </div>
-              {/* Pause/Resume button for testimonial carousel accessibility */}
-              <div className="mt-4 text-center">
-                <button
-                  onClick={() => setIsTestimonialAutoplayPaused((prev) => !prev)}
-                  className="text-sm text-muted-foreground underline hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 p-2"
-                  aria-live="polite" // Announce changes to screen readers
-                >
-                  {isTestimonialAutoplayPaused ? "Retomar Rolagem Automática" : "Pausar Rolagem Automática"}
-                </button>
               </div>
             </div>
 
