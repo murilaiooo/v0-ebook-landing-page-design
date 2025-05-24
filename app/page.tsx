@@ -1,5 +1,8 @@
 "use client"
 
+// Note: Removed dangerouslySetInnerHTML for testimonials and FAQs to prevent XSS.
+// Content is now rendered as plain text. If HTML formatting is required,
+// a robust HTML sanitization library (e.g., DOMPurify) should be implemented.
 import React from "react"
 import { useEffect, useRef, useState } from "react"
 import Image from "next/image"
@@ -36,7 +39,7 @@ import {
 } from "lucide-react"
 import { CountdownTimer } from "../components/countdown-timer"
 import { ExpertProfile } from "../components/expert-profile"
-import { sanitizeInput } from "@/lib/security"
+// import { sanitizeInput } from "@/lib/security" // Removed sanitizeInput import
 import { ModuleCarousel } from "@/components/module-carousel"
 
 // Animation variants
@@ -102,6 +105,8 @@ const AnimatedSection = ({ children, className, delay = 0 }) => {
 export default function LandingPage() {
   const [activeTestimonial, setActiveTestimonial] = useState(0)
   const [displayedTestimonials, setDisplayedTestimonials] = useState([])
+  // State for managing testimonial carousel autoplay pause/resume for accessibility
+  const [isTestimonialAutoplayPaused, setIsTestimonialAutoplayPaused] = useState(false)
   const allTestimonials = [
     {
       name: "Mariana",
@@ -185,18 +190,15 @@ export default function LandingPage() {
   }, [])
 
   useEffect(() => {
-    if (displayedTestimonials.length === 0) return
+    if (displayedTestimonials.length === 0 || isTestimonialAutoplayPaused) {
+      return // Do nothing if paused or no testimonials
+    }
 
     const interval = setInterval(() => {
       setActiveTestimonial((prev) => (prev + 1) % displayedTestimonials.length)
     }, 5000)
     return () => clearInterval(interval)
-  }, [displayedTestimonials.length])
-
-  // Função para sanitizar texto antes de exibir
-  const sanitize = (text: string) => {
-    return { __html: sanitizeInput(text) }
-  }
+  }, [displayedTestimonials.length, isTestimonialAutoplayPaused]) // Add isTestimonialAutoplayPaused to dependency array
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground overflow-x-hidden">
@@ -575,10 +577,7 @@ export default function LandingPage() {
                             <Star key={i} className="h-4 w-4 fill-primary" />
                           ))}
                       </div>
-                      <p
-                        className="text-muted-foreground mb-4"
-                        dangerouslySetInnerHTML={sanitize(`"${testimonial.text}"`)}
-                      ></p>
+                      <p className="text-muted-foreground mb-4">"{testimonial.text}"</p>
                       <div className="flex items-center gap-3">
                         <div className="rounded-full bg-primary/20 p-2 text-primary font-bold">
                           {testimonial.name
@@ -605,6 +604,16 @@ export default function LandingPage() {
                     aria-label={`Ver depoimento ${index + 1}`}
                   />
                 ))}
+              </div>
+              {/* Pause/Resume button for testimonial carousel accessibility */}
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => setIsTestimonialAutoplayPaused((prev) => !prev)}
+                  className="text-sm text-muted-foreground underline hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 p-2"
+                  aria-live="polite" // Announce changes to screen readers
+                >
+                  {isTestimonialAutoplayPaused ? "Retomar Rolagem Automática" : "Pausar Rolagem Automática"}
+                </button>
               </div>
             </div>
 
@@ -1262,7 +1271,7 @@ export default function LandingPage() {
                       transition={{ duration: 0.3 }}
                       className="p-4 pt-0 text-muted-foreground"
                     >
-                      <p dangerouslySetInnerHTML={sanitize(faq.answer)}></p>
+                      <p>{faq.answer}</p>
                     </motion.div>
                   </details>
                 </motion.div>
@@ -1357,20 +1366,21 @@ export default function LandingPage() {
                 </ul>
               </div>
               <div>
+                {/* // TODO: Replace javascript:void(0); with actual links for legal documents. */}
                 <h3 className="font-bold mb-4">Legal</h3>
                 <ul className="space-y-2 text-sm">
                   <motion.li whileHover={{ x: 3 }} transition={{ duration: 0.2 }}>
-                    <Link href="#" className="text-muted-foreground hover:text-foreground">
+                    <Link href="javascript:void(0);" className="text-muted-foreground hover:text-foreground">
                       Termos de Uso
                     </Link>
                   </motion.li>
                   <motion.li whileHover={{ x: 3 }} transition={{ duration: 0.2 }}>
-                    <Link href="#" className="text-muted-foreground hover:text-foreground">
+                    <Link href="javascript:void(0);" className="text-muted-foreground hover:text-foreground">
                       Política de Privacidade
                     </Link>
                   </motion.li>
                   <motion.li whileHover={{ x: 3 }} transition={{ duration: 0.2 }}>
-                    <Link href="#" className="text-muted-foreground hover:text-foreground">
+                    <Link href="javascript:void(0);" className="text-muted-foreground hover:text-foreground">
                       Política de Reembolso
                     </Link>
                   </motion.li>

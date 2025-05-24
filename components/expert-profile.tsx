@@ -83,22 +83,31 @@ export function ExpertProfile({ className = "" }: ExpertProfileProps) {
             ))}
           </div>
 
+          {/* // TODO: Replace javascript:void(0); with actual profile/page links for the expert. */}
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" size="sm" className="gap-2">
-              <Linkedin className="h-4 w-4" />
-              <span>LinkedIn</span>
+            <Button variant="outline" size="sm" asChild className="gap-2">
+              <a href="javascript:void(0);">
+                <Linkedin className="h-4 w-4" />
+                <span>LinkedIn</span>
+              </a>
             </Button>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Twitter className="h-4 w-4" />
-              <span>Twitter</span>
+            <Button variant="outline" size="sm" asChild className="gap-2">
+              <a href="javascript:void(0);">
+                <Twitter className="h-4 w-4" />
+                <span>Twitter</span>
+              </a>
             </Button>
-            <Button variant="outline" size="sm" className="gap-2">
-              <BookOpen className="h-4 w-4" />
-              <span>Blog</span>
+            <Button variant="outline" size="sm" asChild className="gap-2">
+              <a href="javascript:void(0);">
+                <BookOpen className="h-4 w-4" />
+                <span>Blog</span>
+              </a>
             </Button>
-            <Button variant="outline" size="sm" className="gap-2">
-              <ExternalLink className="h-4 w-4" />
-              <span>Site Oficial</span>
+            <Button variant="outline" size="sm" asChild className="gap-2">
+              <a href="javascript:void(0);">
+                <ExternalLink className="h-4 w-4" />
+                <span>Site Oficial</span>
+              </a>
             </Button>
           </div>
 

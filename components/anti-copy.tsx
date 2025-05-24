@@ -1,3 +1,34 @@
+/**
+ * NOTE ON AntiCopy COMPONENT:
+ *
+ * This component attempts to prevent text selection, context menu access,
+ * and common copy keyboard shortcuts. While the intent may be content protection,
+ * such scripts have several drawbacks:
+ *
+ * 1. User Experience: They can be frustrating for users, hindering legitimate
+ *    interactions with the content (e.g., copying a product name, quote, or
+ *    address for personal use). This is generally considered a poor UX practice.
+ *
+ * 2. Accessibility: These restrictions can significantly impede users relying on
+ *    assistive technologies (e.g., screen readers that might use text selection
+ *    or clipboard access). It can also affect users who need to copy text for
+ *    translation or other accessibility reasons.
+ *
+ * 3. Effectiveness: Such client-side restrictions are easily bypassed by users
+ *    with basic technical knowledge (e.g., by disabling JavaScript, using browser
+ *    developer tools, or simply viewing page source). They do not offer robust
+ *    protection against determined individuals.
+ *
+ * Recommendation:
+ * If content protection is a high priority, alternative methods should be
+ * considered (e.g., watermarking for images, legal notices). For text content,
+ * true client-side protection is very difficult. If this component is a
+ * strict business requirement, it's important to acknowledge these trade-offs
+ * in user experience and accessibility.
+ *
+ * This component should be thoroughly tested to ensure it doesn't break
+ * essential site functionality or navigation.
+ */
 "use client"
 
 import type React from "react"

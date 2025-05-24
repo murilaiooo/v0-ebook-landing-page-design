@@ -45,11 +45,15 @@ export default function RootLayout({
         />
 
         {/* Meta tags de segurança */}
+        {/* CSP updated for enhanced security:
+        // - Removed 'unsafe-eval' from script-src to reduce XSS attack surface.
+        //   (Note: GTM/GA functionality should be tested; 'unsafe-inline' is present for GTM's inline snippets).
+        // - Removed https://postimg.cc from script-src as it's not a trusted script source. */}
         <meta
           httpEquiv="Content-Security-Policy"
           content={`
             default-src 'self';
-            script-src 'self' 'unsafe-inline' 'unsafe-eval' https://postimg.cc;
+            script-src 'self' 'unsafe-inline' https://www.googletagmanager.com;
             style-src 'self' 'unsafe-inline';
             img-src 'self' data: https://postimg.cc https://i.postimg.cc https://placeholder.svg;
             font-src 'self' data:;

@@ -160,6 +160,17 @@ export function ModuleCarousel({ modules }: ModuleCarouselProps) {
           />
         ))}
       </div>
+
+      {/* Pause/Resume button for module carousel autoplay accessibility */}
+      <div className="mt-4 text-center">
+        <button
+          onClick={() => setAutoplay(prev => !prev)}
+          className="text-sm text-muted-foreground underline hover:text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 p-2"
+          aria-live="polite" // Announce changes to screen readers
+        >
+          {autoplay ? "Pausar Rolagem Automática" : "Iniciar Rolagem Automática"}
+        </button>
+      </div>
     </div>
   )
 }
