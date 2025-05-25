@@ -129,7 +129,7 @@ export default function LandingPage() {
       occupation: "Professor Universitário",
       text: "Transformei meu conhecimento em um curso online que vende enquanto durmo. Já são mais de 2.300 alunos e uma renda mensal média de R$3.700 sem precisar gravar novos conteúdos.",
       stars: 5,
-      highlight: "R$3.700/mês com infoproduto",
+      highlight: "R$3.600/mês com infoproduto",
     },
     {
       name: "Juliana",
