@@ -220,7 +220,7 @@ export default function LandingPage() {
           </div>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button asChild size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-              <a href="https://payments.clickmax.io/rRoJNHDAJj">Comprar Agora</a>
+              <a href="https://lucro-automatico2.netlify.app/">Comprar Agora</a>
             </Button>
           </motion.div>
         </div>
@@ -334,7 +334,7 @@ export default function LandingPage() {
                     size="lg"
                     className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-lg h-14 animate-pulse"
                   >
-                    <a href="https://payments.clickmax.io/rRoJNHDAJj" className="flex items-center justify-center gap-2">
+                    <a href="https://lucro-automatico2.netlify.app/" className="flex items-center justify-center gap-2">
                       <span>QUERO GERAR RENDA PASSIVA</span>
                       <ArrowRight className="h-5 w-5" />
                     </a>
@@ -528,7 +528,7 @@ export default function LandingPage() {
               className="mt-12 text-center"
             >
               <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90" size="lg">
-                <a href="https://payments.clickmax.io/rRoJNHDAJj" className="flex items-center gap-2">
+                <a href="https://lucro-automatico2.netlify.app/" className="flex items-center gap-2">
                   <span>Quero Aprender com o Especialista</span>
                   <ArrowRight className="h-5 w-5" />
                 </a>
@@ -644,7 +644,7 @@ export default function LandingPage() {
               className="mt-8 text-center"
             >
               <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <a href="https://payments.clickmax.io/rRoJNHDAJj" className="flex items-center gap-2">
+                <a href="https://lucro-automatico2.netlify.app/" className="flex items-center gap-2">
                   <span>Quero Resultados Como Esses</span>
                   <ArrowRight className="h-5 w-5" />
                 </a>
@@ -729,7 +729,7 @@ export default function LandingPage() {
               className="mt-16 text-center"
             >
               <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <a href="https://payments.clickmax.io/rRoJNHDAJj" className="flex items-center gap-2">
+                <a href="https://lucro-automatico2.netlify.app/" className="flex items-center gap-2">
                   <span>Quero Dominar Essas Estratégias</span>
                   <ArrowRight className="h-5 w-5" />
                 </a>
@@ -889,7 +889,7 @@ export default function LandingPage() {
               className="mt-12 text-center"
             >
               <Button asChild size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <a href="https://payments.clickmax.io/rRoJNHDAJj" className="flex items-center gap-2">
+                <a href="https://lucro-automatico2.netlify.app/" className="flex items-center gap-2">
                   <span>Quero Começar Agora</span>
                   <ArrowRight className="h-5 w-5" />
                 </a>
@@ -1155,7 +1155,8 @@ export default function LandingPage() {
                     </p>
                     <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                       <Link
-                        href="https://payments.clickmax.io/rRoJNHDAJj"
+                        href="https://lucro-automatico2.netlify.app/"
+                        href="https://lucro-automatico2.netlify.app/"
                         passHref
                       >
                         <Button
@@ -1182,7 +1183,7 @@ export default function LandingPage() {
                     </p>
                     <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
                       <Link
-                        href="https://payments.clickmax.io/rRoJNHDAJj"
+                        href="https://lucro-automatico2.netlify.app/"
                         passHref
                       >
                         <Button
@@ -1322,7 +1323,7 @@ export default function LandingPage() {
                 size="lg"
                 className="bg-primary text-primary-foreground hover:bg-primary/90 h-14 px-8 text-lg"
               >
-                <a href="https://payments.clickmax.io/rRoJNHDAJj" className="flex items-center gap-2">
+                <a href="https://lucro-automatico2.netlify.app/" className="flex items-center gap-2">
                   <span>GARANTIR MEU ACESSO AGORA</span>
                   <ArrowRight className="h-5 w-5" />
                 </a>
@@ -1372,7 +1373,7 @@ export default function LandingPage() {
                     </Link>
                   </motion.li>
                   <motion.li whileHover={{ x: 3 }} transition={{ duration: 0.2 }}>
-                    <Link href="https://payments.clickmax.io/rRoJNHDAJj" className="text-muted-foreground hover:text-foreground">
+                    <Link href="https://lucro-automatico2.netlify.app/" className="text-muted-foreground hover:text-foreground">
                       Comprar Agora
                     </Link>
                   </motion.li>
